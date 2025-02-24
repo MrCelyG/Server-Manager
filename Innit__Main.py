@@ -1,23 +1,20 @@
 import tkinter as tk
-from Python.ManageFeatures import CreateServer
+from Core import startupVariables as SVP
 
-Main = tk.Tk()
+root = tk.Tk()
+root.title("Control Panel")
+root.geometry('500x300')
 
-# Properties of main
-Main.title("Main Control Panel")
-Main.geometry("500x300")
-Main.resizable(False, False)
+rootMenubar = tk.Menu(root)
 
-# Create Menubar
-menubar = tk.Menu(Main)
+# Create Menu
+ServerMenu = tk.Menu(rootMenubar, tearoff=0)
+ServerMenu.add_command(label="New Server")
+ServerMenu.add_command(label="Website...")
+ServerMenu.add_separator()
+ServerMenu.add_command(label="About")
+ServerMenu.add_command(label="Settings")
+rootMenubar.add_cascade(label="Server", menu=ServerMenu)
 
-Server = tk.Menu(menubar, tearoff= 0)
-menubar.add_cascade(label= "Server", menu= Server)
-
-Server.add_command(label= "Create Folder", command= CreateServer.CreateFolder)
-Server.add_command(label= "Manage Server")
-Server.add_command(label= "Start Server")
-
-Main.config(menu = menubar)
-Main.mainloop()
-
+root.config(menu=rootMenubar)
+root.mainloop()
