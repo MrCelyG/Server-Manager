@@ -2,82 +2,85 @@ import tkinter as tk
 from tkinter import messagebox
 import pathlib
 import json
+import CreateServer as CS
 
-root = tk.Tk()
-root.title("Control Panel")
-root.geometry('500x300')
+# Initialize the main application window
+app = tk.Tk()
+app.title("Control Panel")
+app.geometry('500x300')
 
-rootMenubar = tk.Menu(root)
+# Define the path for user settings
+settings_file_path = pathlib.Path('userSettings.json')
 
-# Creating User Settings If Not Found And Dumping Settings And Stuff.
-SettingsPath = pathlib.Path('userSettings.json')
-
-def SettingsDumpJson():
+# Function to create user settings file if not found
+def create_user_settings():
     try:
         print('Creating userSettings.json file.')
-        from Core import startupVariables as SVP
+        from Core import startupVariables as svp  # Import startup variables
         
-        with open("userSettings.json", "w") as FileToBeDumped:
-            json.dump(SVP.Setting_Vars, FileToBeDumped, indent=1)
+        with open(settings_file_path, "w") as settings_file:
+            json.dump(svp.Setting_Vars, settings_file, indent=1)
     
-    except Exception as e:
-        print(f"Error in SettingsDumpJson: {e}")
+    except Exception as error:
+        print(f"Error in create_user_settings: {error}")
 
-def ShowUserTips():
+# Function to prompt user for tips
+def prompt_user_tips():
     try:
-        MessageBox = messagebox.askyesno("Recive Tips?", "Recive Tips On How To Use (Can Be Turned Off In Settings)")
+        user_response = messagebox.askyesno("Receive Tips?", "Receive tips on how to use (Can be turned off in settings)")
 
-        # Open the JSON file to read it
-        with open('userSettings.json', 'r') as FileToBeLoaded:
-            JsonData = json.load(FileToBeLoaded)
+        # Load settings
+        with open(settings_file_path, 'r') as settings_file:
+            settings_data = json.load(settings_file)
 
-        # Ensure Python-style Boolean values
-        JsonData["FIRST_TIME_COMPLETE"] = True if MessageBox else False
-        if not MessageBox:
-            JsonData['USER_WANT_HELP'] = False
-            JsonData['FIRST_TIME_COMPLETE'] = True
+        # Update settings based on user response
+        settings_data["FIRST_TIME_COMPLETE"] = True if user_response else False
+        if not user_response:
+            settings_data['USER_WANT_HELP'] = False
+            settings_data['FIRST_TIME_COMPLETE'] = True
+        else:
+            settings_data['USER_WANT_HELP'] = True
+            settings_data['FIRST_TIME_COMPLETE'] = True
+            
+        # Save updated settings
+        with open(settings_file_path, 'w') as settings_file:
+            json.dump(settings_data, settings_file, indent=1)
 
-        # Save the updated JSON data
-        with open('userSettings.json', 'w') as FileToBeDumped:
-            json.dump(JsonData, FileToBeDumped, indent=1)
+    except Exception as error:
+        print(f"Error in prompt_user_tips: {error}")
 
-    except Exception as e:
-        print(f"Error in ShowUserTips: {e}")
-
-# Check if the settings file exists
-if SettingsPath.exists():
-    print("Settings file exists.")
-else:
+# Check if the settings file exists; create if it doesn’t
+if not settings_file_path.exists():
     print("Settings file does not exist. Creating it.")
-    SettingsDumpJson()
+    create_user_settings()
 
-# Create Menu
-ServerMenu = tk.Menu(rootMenubar, tearoff=0)
-ServerMenu.add_command(label="New Server")
-ServerMenu.add_command(label="Website...")
-ServerMenu.add_separator()
-ServerMenu.add_command(label="About")
-ServerMenu.add_command(label="Settings")
-rootMenubar.add_cascade(label="Server", menu=ServerMenu)
-
-def CheckIfUserWantTips():
+# Function to check if user wants tips
+def check_user_tips_preference():
     try:
-        with open('userSettings.json', 'r') as Flag1:
-            JsonData = json.load(Flag1)
+        with open(settings_file_path, 'r') as settings_file:
+            settings_data = json.load(settings_file)
         
-        # Check if FIRST_TIME_COMPLETE is False
-        Bored = JsonData.get('FIRST_TIME_COMPLETE', False)
-        
-        if Bored == False:
-            ShowUserTips()
+        if not settings_data.get('FIRST_TIME_COMPLETE', False):
+            prompt_user_tips()
     
-    except Exception as e:
-        print(f"Error in CheckIfUserWantTips: {e}")
+    except Exception as error:
+        print(f"Error in check_user_tips_preference: {error}")
 
-# Calling the function to check if user wants tips
-CheckIfUserWantTips()
+# Call function to check user's preference for tips
+check_user_tips_preference()
 
-root.config(menu=rootMenubar)
+# Create menu bar
+main_menu = tk.Menu(app)
 
-# Run Tkinter main loop
-root.mainloop()
+server_menu = tk.Menu(main_menu, tearoff=0)
+server_menu.add_command(label="New Server", command=CS.RunServerCreation)
+server_menu.add_command(label="Website...")
+server_menu.add_separator()
+server_menu.add_command(label="About")
+server_menu.add_command(label="Settings")
+main_menu.add_cascade(label="Server", menu=server_menu)
+
+app.config(menu=main_menu)
+
+# Run Tkinter event loop
+app.mainloop()
